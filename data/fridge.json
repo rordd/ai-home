@@ -1,0 +1,15 @@
+{
+  "items": [
+    {"id": 1, "name": "계란", "quantity": "10개", "expiry": "2026-02-25", "category": "유제품/난류"},
+    {"id": 2, "name": "우유", "quantity": "1L", "expiry": "2026-02-20", "category": "유제품/난류"},
+    {"id": 3, "name": "두부", "quantity": "1모", "expiry": "2026-02-19", "category": "채소/두부"},
+    {"id": 4, "name": "대파", "quantity": "2단", "expiry": "2026-02-22", "category": "채소/두부"},
+    {"id": 5, "name": "양파", "quantity": "3개", "expiry": "2026-03-01", "category": "채소/두부"},
+    {"id": 6, "name": "마늘", "quantity": "1봉", "expiry": "2026-03-10", "category": "양념"},
+    {"id": 7, "name": "고추장", "quantity": "1통", "expiry": "2026-08-01", "category": "양념"},
+    {"id": 8, "name": "된장", "quantity": "1통", "expiry": "2026-07-15", "category": "양념"},
+    {"id": 9, "name": "삼겹살", "quantity": "500g", "expiry": "2026-02-18", "category": "육류"},
+    {"id": 10, "name": "김치", "quantity": "2kg", "expiry": "2026-03-15", "category": "반찬"}
+  ],
+  "lastUpdated": "2026-02-17T12:00:00+09:00"
+}

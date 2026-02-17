@@ -1,0 +1,11 @@
+{
+  "washer": {"name": "세탁기", "status": "idle", "course": null, "remainingMin": 0},
+  "aircon": {"name": "에어컨", "status": "off", "targetTemp": 24, "currentTemp": 22, "mode": "auto"},
+  "vacuum": {"name": "로봇청소기", "status": "docked", "battery": 100, "lastCleaned": "2026-02-16T10:00:00+09:00"},
+  "lights": {
+    "거실": {"on": true, "brightness": 80},
+    "안방": {"on": false, "brightness": 0},
+    "주방": {"on": true, "brightness": 100},
+    "화장실": {"on": false, "brightness": 0}
+  }
+}

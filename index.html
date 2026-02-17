@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈버드 AI홈</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a1a;--card:#2a2a2a;--text:#e0e0e0;--muted:#888;--accent:#FF8C00;--charcoal:#3C3C3C;--danger:#ff4444;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,.4)}
+html{font-size:clamp(14px,1.8vw,22px)}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.5rem;background:var(--charcoal);flex-shrink:0}
+.header h1{font-size:1.6rem;color:var(--accent)}
+.header-right{display:flex;gap:1.5rem;align-items:center;font-size:1.1rem}
+.weather{display:flex;align-items:center;gap:.4rem}
+.weather-icon{font-size:1.4rem}
+.clock{font-variant-numeric:tabular-nums;font-weight:600}
+/* Main */
+.main{display:flex;flex:1;gap:1rem;padding:1rem;overflow:hidden}
+/* Chat */
+.chat-panel{flex:0 0 60%;display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.chat-header{padding:.7rem 1rem;font-size:1.1rem;font-weight:700;border-bottom:1px solid #444;color:var(--accent)}
+.messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
+.msg{max-width:80%;padding:.6rem 1rem;border-radius:12px;line-height:1.5;word-break:break-word}
+.msg.bot{align-self:flex-start;background:#383838;border-left:3px solid var(--accent)}
+.msg.user{align-self:flex-end;background:var(--accent);color:#111}
+.chat-input{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid #444}
+.chat-input input{flex:1;padding:.6rem 1rem;border:none;border-radius:10px;background:#383838;color:var(--text);font-size:1rem;outline:none}
+.chat-input input:focus{box-shadow:0 0 0 2px var(--accent)}
+.chat-input button{padding:.6rem 1.2rem;border:none;border-radius:10px;background:var(--accent);color:#111;font-weight:700;font-size:1rem;cursor:pointer}
+/* Right panels */
+.right-panel{flex:1;display:flex;flex-direction:column;gap:1rem;overflow:hidden}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;flex:1}
+.card-title{padding:.7rem 1rem;font-weight:700;font-size:1.05rem;border-bottom:1px solid #444;color:var(--accent);flex-shrink:0}
+.card-body{flex:1;overflow-y:auto;padding:.8rem 1rem}
+/* Fridge */
+.fridge-item{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid #333}
+.fridge-item:last-child{border:none}
+.fridge-name{font-weight:600}
+.fridge-qty{color:var(--muted);font-size:.85rem}
+.fridge-dday{font-weight:700;font-size:.9rem}
+.fridge-dday.urgent{color:var(--danger);animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.5}}
+/* Appliances */
+.appliance{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #333}
+.appliance:last-child{border:none}
+.appliance-info{display:flex;align-items:center;gap:.6rem}
+.appliance-icon{font-size:1.4rem}
+.toggle{width:3.2rem;height:1.7rem;border-radius:1rem;border:none;cursor:pointer;position:relative;transition:background .3s}
+.toggle.on{background:var(--accent)}
+.toggle.off{background:#555}
+.toggle::after{content:'';position:absolute;top:.15rem;left:.15rem;width:1.4rem;height:1.4rem;border-radius:50%;background:#fff;transition:transform .3s}
+.toggle.on::after{transform:translateX(1.5rem)}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🐦 빈버드 AI홈</h1>
+  <div class="header-right">
+    <div class="weather"><span class="weather-icon" id="wIcon">⏳</span><span id="wTemp">--</span></div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="chat-panel">
+    <div class="chat-header">💬 빈버드 채팅</div>
+    <div class="messages" id="messages">
+      <div class="msg bot">안녕하세요! 빈버드 AI홈입니다 🐦 무엇을 도와드릴까요?</div>
+    </div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="메시지를 입력하세요..." autocomplete="off">
+      <button onclick="sendChat()">전송</button>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="card">
+      <div class="card-title">🧊 냉장고 재고</div>
+      <div class="card-body" id="fridge">불러오는 중...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏠 가전 상태</div>
+      <div class="card-body" id="appliances">불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:3000';
+
+// Clock
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+setInterval(updateClock,1000);updateClock();
+
+// Weather (Open-Meteo)
+async function fetchWeather(){
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.55&longitude=126.85&current=temperature_2m,weather_code&timezone=Asia%2FSeoul');
+    const d=await r.json();
+    const t=d.current.temperature_2m;
+    const wc=d.current.weather_code;
+    const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌧',63:'🌧',65:'🌧️',71:'🌨',73:'🌨',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
+    document.getElementById('wIcon').textContent=icons[wc]||'🌡';
+    document.getElementById('wTemp').textContent=Math.round(t)+'°C';
+  }catch(e){document.getElementById('wTemp').textContent='날씨 오류'}
+}
+fetchWeather();setInterval(fetchWeather,600000);
+
+// Chat
+const msgBox=document.getElementById('messages');
+const chatInput=document.getElementById('chatInput');
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
+
+function addMsg(text,type){
+  const d=document.createElement('div');
+  d.className='msg '+type;
+  d.textContent=text;
+  msgBox.appendChild(d);
+  msgBox.scrollTop=msgBox.scrollHeight;
+}
+
+async function sendChat(){
+  const text=chatInput.value.trim();
+  if(!text)return;
+  chatInput.value='';
+  addMsg(text,'user');
+  try{
+    const r=await fetch(API_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
+    const d=await r.json();
+    addMsg(d.reply||d.message||JSON.stringify(d),'bot');
+  }catch(e){addMsg('⚠️ 서버 연결 실패','bot')}
+}
+
+// Fridge
+async function fetchFridge(){
+  try{
+    const r=await fetch(API_BASE+'/api/fridge');
+    const items=await r.json();
+    const el=document.getElementById('fridge');
+    if(!items.length){el.innerHTML='<div style="color:var(--muted)">재고 없음</div>';return}
+    el.innerHTML=items.map(i=>{
+      const exp=new Date(i.expiry||i.expiryDate||i.expiration);
+      const diff=Math.ceil((exp-new Date())/(86400000));
+      const cls=diff<=3?'urgent':'';
+      return `<div class="fridge-item"><div><span class="fridge-name">${i.name}</span> <span class="fridge-qty">×${i.quantity||i.qty||1}</span></div><span class="fridge-dday ${cls}">D${diff<=0?'+'+Math.abs(diff):'-'+diff}</span></div>`;
+    }).join('');
+  }catch(e){document.getElementById('fridge').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
+}
+
+// Appliances
+async function fetchAppliances(){
+  try{
+    const r=await fetch(API_BASE+'/api/appliances');
+    const items=await r.json();
+    const el=document.getElementById('appliances');
+    if(!items.length){el.innerHTML='<div style="color:var(--muted)">등록된 가전 없음</div>';return}
+    el.innerHTML=items.map(i=>{
+      const on=i.status==='on'||i.state==='on'||i.on===true;
+      const icons={'에어컨':'❄️','세탁기':'🫧','조명':'💡','TV':'📺','공기청정기':'🌬','로봇청소기':'🤖','가습기':'💧'};
+      const icon=icons[i.name]||i.icon||'⚡';
+      return `<div class="appliance"><div class="appliance-info"><span class="appliance-icon">${icon}</span><span>${i.name} <span style="color:${on?'var(--accent)':'var(--muted)'}">${on?'켜짐':'꺼짐'}</span></span></div><button class="toggle ${on?'on':'off'}" onclick="toggleAppliance('${i.id||i.device||i.name}',${!on})"></button></div>`;
+    }).join('');
+  }catch(e){document.getElementById('appliances').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
+}
+
+async function toggleAppliance(device,state){
+  try{
+    await fetch(API_BASE+'/api/appliances/'+encodeURIComponent(device),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
+    fetchAppliances();
+  }catch(e){}
+}
+
+// Init & auto-refresh
+fetchFridge();fetchAppliances();
+setInterval(()=>{fetchFridge();fetchAppliances()},10000);
+</script>
+</body>
+</html>
