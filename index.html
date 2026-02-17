@@ -43,7 +43,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 
 /* Right panels */
 .right-panel{flex:1;display:flex;flex-direction:column;gap:1rem;overflow:hidden}
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;flex:1}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.card.fridge-card{flex:0 0 auto;max-height:40%}
+.card.appliance-card{flex:1;min-height:0}
 .card-title{padding:.7rem 1rem;font-weight:700;font-size:1.05rem;border-bottom:1px solid #444;color:var(--accent);flex-shrink:0}
 .card-body{flex:1;overflow-y:auto;padding:.8rem 1rem}
 
@@ -57,17 +59,38 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .fridge-dday.ok{color:var(--success)}
 @keyframes pulse{50%{opacity:.5}}
 
+/* Room tabs */
+.room-tabs{display:flex;gap:0;padding:.4rem .6rem 0;flex-shrink:0;overflow-x:auto;border-bottom:1px solid #444}
+.room-tabs::-webkit-scrollbar{height:3px}
+.room-tab{padding:.35rem .7rem;font-size:.78rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;flex-shrink:0}
+.room-tab:hover{color:var(--text)}
+.room-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
 /* Appliances */
-.appliance{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid #333}
+.room-group-label{font-size:.8rem;font-weight:700;color:var(--accent);padding:.5rem 0 .2rem;margin-top:.3rem;border-bottom:1px solid #333}
+.room-group-label:first-child{margin-top:0}
+.appliance{display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid #2a2a2a}
 .appliance:last-child{border:none}
-.appliance-info{display:flex;align-items:center;gap:.6rem}
-.appliance-icon{font-size:1.4rem}
-.appliance-status{font-size:.85rem}
-.toggle{width:3.2rem;height:1.7rem;border-radius:1rem;border:none;cursor:pointer;position:relative;transition:background .3s}
+.appliance-info{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0}
+.appliance-icon{font-size:1.2rem;flex-shrink:0}
+.appliance-detail{min-width:0}
+.appliance-name{font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.3rem}
+.appliance-status{font-size:.75rem;color:var(--muted)}
+.on-label{color:var(--accent);font-weight:700;font-size:.75rem}
+.off-label{color:var(--muted);font-size:.75rem}
+.toggle{width:2.8rem;height:1.5rem;border-radius:1rem;border:none;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
 .toggle.on{background:var(--accent)}
 .toggle.off{background:#555}
-.toggle::after{content:'';position:absolute;top:.15rem;left:.15rem;width:1.4rem;height:1.4rem;border-radius:50%;background:#fff;transition:transform .3s}
-.toggle.on::after{transform:translateX(1.5rem)}
+.toggle::after{content:'';position:absolute;top:.15rem;left:.15rem;width:1.2rem;height:1.2rem;border-radius:50%;background:#fff;transition:transform .3s}
+.toggle.on::after{transform:translateX(1.3rem)}
+
+/* Progress bar for washer/dishwasher */
+.progress-wrap{width:100%;height:.35rem;background:#444;border-radius:.2rem;margin-top:.2rem;overflow:hidden}
+.progress-bar{height:100%;background:var(--accent);border-radius:.2rem;transition:width .5s}
+
+/* Brightness bar */
+.brightness-bar{width:3.5rem;height:.35rem;background:#444;border-radius:.2rem;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:.3rem}
+.brightness-fill{height:100%;background:var(--accent);border-radius:.2rem}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px}
@@ -129,12 +152,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
   </div>
 
   <div class="right-panel">
-    <div class="card">
+    <div class="card fridge-card">
       <div class="card-title">🧊 냉장고 재고</div>
       <div class="card-body" id="fridge">불러오는 중...</div>
     </div>
-    <div class="card">
+    <div class="card appliance-card">
       <div class="card-title">🏠 가전 상태</div>
+      <div class="room-tabs" id="roomTabs"></div>
       <div class="card-body" id="appliances">불러오는 중...</div>
     </div>
   </div>
@@ -240,45 +264,106 @@ async function fetchFridge(){
   }catch(e){document.getElementById('fridge').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
 }
 
-// Appliances
-const deviceIcons={washer:'🫧',aircon:'❄️',vacuum:'🤖',lights:'💡',tv:'📺'};
-const deviceNames={washer:'세탁기',aircon:'에어컨',vacuum:'로봇청소기',lights:'조명',tv:'TV'};
+// Appliances (room-based)
+const deviceIcons={tv:'📺',aircon:'❄️',light:'💡',vacuum:'🤖',airpurifier:'🌬',fridge:'🧊',washer:'🫧',dishwasher:'🍽',doorlock:'🔒',fan:'💨'};
+const deviceNames={tv:'TV',aircon:'에어컨',light:'조명',vacuum:'로봇청소기',airpurifier:'공기청정기',fridge:'냉장고',washer:'세탁기',dishwasher:'식기세척기',doorlock:'도어락',fan:'환풍기'};
+
+let roomsData={};
+let currentRoom='전체';
 
 function isDeviceOn(key,val){
-  if(key==='lights') return Object.values(val).some(r=>r.on);
+  if(key==='light') return val.on||val.status==='on';
+  if(key==='doorlock') return val.locked||val.status==='locked';
   return val.status==='on'||val.status==='running'||val.status==='cleaning';
 }
 
 function deviceDetail(key,val){
-  if(key==='washer') return val.status==='running'?`${val.course||'표준'} ${val.remainingMin}분 남음`:(val.status==='idle'?'대기':'완료');
-  if(key==='aircon') return val.status==='on'?`${val.targetTemp}°C ${val.mode}`:'꺼짐';
-  if(key==='vacuum') return val.status==='docked'?`충전중 ${val.battery}%`:(val.status==='cleaning'?'청소중':'복귀중');
-  if(key==='lights'){const on=Object.entries(val).filter(([,v])=>v.on).map(([k])=>k);return on.length?on.join(', ')+' 켜짐':'전체 꺼짐'}
+  if(key==='washer'||key==='dishwasher'){
+    if(val.status==='running'){
+      const rm=val.remainingMin||0;
+      const total=val.totalMin||rm;
+      const pct=total>0?Math.round(((total-rm)/total)*100):0;
+      return `<div>${val.course||'표준'} ${rm}분 남음</div><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>`;
+    }
+    return val.status==='done'?'완료':'대기';
+  }
+  if(key==='aircon') return val.status==='on'?`${val.targetTemp||'--'}°C ${val.mode||''}`:'꺼짐';
+  if(key==='vacuum') return val.status==='docked'?`충전중 ${val.battery||'--'}%`:(val.status==='cleaning'?'청소중':'복귀중');
   if(key==='tv') return val.status==='on'?`${val.input||'대시보드'} 🔊${val.volume||0}`:'꺼짐';
+  if(key==='airpurifier') return val.status==='on'?`PM2.5 ${val.pm25||'--'} ${val.mode||''}`:'꺼짐';
+  if(key==='fan') return val.status==='on'?`${val.speed||''}단`:'꺼짐';
+  if(key==='doorlock') return (val.locked||val.status==='locked')?'🔒 잠김':'🔓 열림';
+  if(key==='light'){
+    if(!val.on&&val.status!=='on') return '꺼짐';
+    const b=val.brightness!=null?val.brightness:100;
+    return `밝기 ${b}% <span class="brightness-bar"><span class="brightness-fill" style="width:${b}%"></span></span>`;
+  }
+  if(key==='fridge') return val.status==='on'?`${val.temp||'--'}°C`:'꺼짐';
   return val.status||'';
+}
+
+function renderRoomTabs(rooms){
+  const tabsEl=document.getElementById('roomTabs');
+  const roomNames=['전체',...Object.keys(rooms)];
+  tabsEl.innerHTML=roomNames.map(name=>
+    `<div class="room-tab${name===currentRoom?' active':''}" onclick="switchRoom('${name}')">${name}</div>`
+  ).join('');
+}
+
+function switchRoom(name){
+  currentRoom=name;
+  renderRoomTabs(roomsData);
+  renderAppliances();
+}
+
+function renderAppliances(){
+  const el=document.getElementById('appliances');
+  const rooms=roomsData;
+  if(!Object.keys(rooms).length){el.innerHTML='<div style="color:var(--muted)">등록된 가전 없음</div>';return}
+
+  let html='';
+  const roomsToShow=currentRoom==='전체'?Object.keys(rooms):[currentRoom];
+
+  for(const room of roomsToShow){
+    const devices=rooms[room];
+    if(!devices) continue;
+    if(currentRoom==='전체') html+=`<div class="room-group-label">${room}</div>`;
+    for(const [key,val] of Object.entries(devices)){
+      const on=isDeviceOn(key,val);
+      const icon=deviceIcons[key]||'⚡';
+      const name=val.name||deviceNames[key]||key;
+      const detail=deviceDetail(key,val);
+      const showToggle=key!=='doorlock';
+      html+=`<div class="appliance"><div class="appliance-info"><span class="appliance-icon">${icon}</span><div class="appliance-detail"><div class="appliance-name">${name} <span class="${on?'on-label':'off-label'}">${on?'ON':'OFF'}</span></div><div class="appliance-status">${detail}</div></div></div>${showToggle?`<button class="toggle ${on?'on':'off'}" onclick="toggleAppliance('${room}','${key}',${!on})"></button>`:''}</div>`;
+    }
+  }
+  el.innerHTML=html;
 }
 
 async function fetchAppliances(){
   try{
     const r=await fetch(API_BASE+'/api/appliances');
     const data=await r.json();
-    const el=document.getElementById('appliances');
-    const keys=Object.keys(data).filter(k=>k!=='lastUpdated');
-    if(!keys.length){el.innerHTML='<div style="color:var(--muted)">등록된 가전 없음</div>';return}
-    el.innerHTML=keys.map(key=>{
-      const val=data[key];
-      const on=isDeviceOn(key,val);
-      const icon=deviceIcons[key]||'⚡';
-      const name=val.name||deviceNames[key]||key;
-      const detail=deviceDetail(key,val);
-      return `<div class="appliance"><div class="appliance-info"><span class="appliance-icon">${icon}</span><div><div>${name} <span style="color:${on?'var(--accent)':'var(--muted)'}"> ${on?'ON':'OFF'}</span></div><div class="appliance-status" style="color:var(--muted)">${detail}</div></div></div><button class="toggle ${on?'on':'off'}" onclick="toggleAppliance('${key}',${!on})"></button></div>`;
-    }).join('');
+    // Support both old flat and new rooms structure
+    if(data.rooms){
+      roomsData=data.rooms;
+    } else {
+      // Legacy flat: put everything in 거실
+      const legacy={};
+      for(const [k,v] of Object.entries(data)){
+        if(k==='lastUpdated') continue;
+        legacy[k]=v;
+      }
+      roomsData={'거실':legacy};
+    }
+    renderRoomTabs(roomsData);
+    renderAppliances();
   }catch(e){document.getElementById('appliances').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
 }
 
-async function toggleAppliance(device,state){
+async function toggleAppliance(room,device,state){
   try{
-    await fetch(API_BASE+'/api/appliances/'+device,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
+    await fetch(API_BASE+'/api/appliances/'+encodeURIComponent(room)+'/'+encodeURIComponent(device),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
     fetchAppliances();
   }catch(e){}
 }
