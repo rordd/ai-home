@@ -363,7 +363,7 @@ async function fetchAppliances(){
 
 async function toggleAppliance(room,device,state){
   try{
-    await fetch(API_BASE+'/api/appliances/'+encodeURIComponent(room)+'/'+encodeURIComponent(device),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
+    await fetch(API_BASE+'/api/appliances/'+encodeURIComponent(room)+'/'+encodeURIComponent(device),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:state?'on':'off'})});
     fetchAppliances();
   }catch(e){}
 }
