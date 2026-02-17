@@ -36,7 +36,14 @@ app.post('/api/chat', (req, res) => {
       `echo '${escaped}' | HOME=/home/rordd/.picoclaw-home picoclaw agent`,
       { timeout: 30000, encoding: 'utf-8' }
     );
-    res.json({ reply: stdout.trim() });
+    // Clean up picoclaw output: remove interactive mode header, emoji prefix, goodbye
+    let reply = stdout.trim()
+      .replace(/🦞\s*Interactive mode.*?\n/g, '')
+      .replace(/\nGoodbye!$/g, '')
+      .replace(/^🦞\s*/gm, '')
+      .replace(/^\n+|\n+$/g, '')
+      .trim();
+    res.json({ reply });
   } catch (err) {
     res.status(500).json({ error: 'picoclaw failed', detail: err.message });
   }
