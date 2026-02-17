@@ -72,6 +72,32 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
+
+/* Notification Bell */
+.notif-wrap{position:relative;cursor:pointer}
+.notif-bell{font-size:1.4rem;position:relative}
+.notif-badge{position:absolute;top:-.3rem;right:-.4rem;background:var(--danger);color:#fff;font-size:.6rem;font-weight:700;width:1rem;height:1rem;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none}
+.notif-badge.show{display:flex}
+.notif-dropdown{position:absolute;top:2.2rem;right:0;width:18rem;background:var(--card);border-radius:10px;box-shadow:var(--shadow);max-height:16rem;overflow-y:auto;display:none;z-index:100;border:1px solid #444}
+.notif-dropdown.open{display:block}
+.notif-dropdown-empty{padding:1rem;text-align:center;color:var(--muted);font-size:.85rem}
+.notif-item{padding:.5rem .8rem;border-bottom:1px solid #333;font-size:.85rem;display:flex;align-items:flex-start;gap:.5rem}
+.notif-item:last-child{border:none}
+.notif-dot{width:.5rem;height:.5rem;border-radius:50%;flex-shrink:0;margin-top:.35rem}
+.notif-dot.info{background:#4a9eff}.notif-dot.success{background:var(--success)}.notif-dot.warning{background:#ffa500}.notif-dot.alert{background:var(--danger)}
+.notif-time{color:var(--muted);font-size:.7rem;margin-top:.15rem}
+
+/* Toast notifications */
+.toast-container{position:fixed;top:4rem;right:1rem;z-index:200;display:flex;flex-direction:column;gap:.5rem}
+.toast{padding:.6rem 1rem;border-radius:10px;background:var(--card);border-left:4px solid #4a9eff;box-shadow:var(--shadow);font-size:.85rem;animation:toastIn .3s ease,toastOut .3s ease 3.7s forwards;max-width:18rem}
+.toast.info{border-left-color:#4a9eff}.toast.success{border-left-color:var(--success)}.toast.warning{border-left-color:#ffa500}.toast.alert{border-left-color:var(--danger)}
+@keyframes toastIn{from{opacity:0;transform:translateX(1rem)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(1rem)}}
+
+/* TV Message Overlay */
+.tv-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity .5s}
+.tv-overlay.show{opacity:1;pointer-events:auto}
+.tv-overlay-text{color:#fff;font-size:3rem;font-weight:700;text-align:center;padding:2rem;max-width:80%;text-shadow:0 2px 20px rgba(255,140,0,.5)}
 </style>
 </head>
 <body>
@@ -80,9 +106,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
   <h1>🐦 빈버드 AI홈</h1>
   <div class="header-right">
     <div class="weather"><span class="weather-icon" id="wIcon">⏳</span><span id="wTemp">--</span></div>
+    <div class="notif-wrap" onclick="toggleNotifDropdown()">
+      <div class="notif-bell">🔔<span class="notif-badge" id="notifBadge">0</span></div>
+      <div class="notif-dropdown" id="notifDropdown"><div class="notif-dropdown-empty">알림 없음</div></div>
+    </div>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="tv-overlay" id="tvOverlay"><div class="tv-overlay-text" id="tvOverlayText"></div></div>
 
 <div class="main">
   <div class="chat-panel">
@@ -209,8 +241,8 @@ async function fetchFridge(){
 }
 
 // Appliances
-const deviceIcons={washer:'🫧',aircon:'❄️',vacuum:'🤖',lights:'💡'};
-const deviceNames={washer:'세탁기',aircon:'에어컨',vacuum:'로봇청소기',lights:'조명'};
+const deviceIcons={washer:'🫧',aircon:'❄️',vacuum:'🤖',lights:'💡',tv:'📺'};
+const deviceNames={washer:'세탁기',aircon:'에어컨',vacuum:'로봇청소기',lights:'조명',tv:'TV'};
 
 function isDeviceOn(key,val){
   if(key==='lights') return Object.values(val).some(r=>r.on);
@@ -222,6 +254,7 @@ function deviceDetail(key,val){
   if(key==='aircon') return val.status==='on'?`${val.targetTemp}°C ${val.mode}`:'꺼짐';
   if(key==='vacuum') return val.status==='docked'?`충전중 ${val.battery}%`:(val.status==='cleaning'?'청소중':'복귀중');
   if(key==='lights'){const on=Object.entries(val).filter(([,v])=>v.on).map(([k])=>k);return on.length?on.join(', ')+' 켜짐':'전체 꺼짐'}
+  if(key==='tv') return val.status==='on'?`${val.input||'대시보드'} 🔊${val.volume||0}`:'꺼짐';
   return val.status||'';
 }
 
@@ -250,9 +283,54 @@ async function toggleAppliance(device,state){
   }catch(e){}
 }
 
+// Notifications & TV Message
+let pendingNotifs=[];
+function toggleNotifDropdown(){
+  document.getElementById('notifDropdown').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.notif-wrap')) document.getElementById('notifDropdown').classList.remove('open');
+});
+function showToast(msg,type){
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+async function pollNotifications(){
+  try{
+    const r=await fetch(API_BASE+'/api/notifications');
+    const data=await r.json();
+    if(data.length){
+      pendingNotifs=pendingNotifs.concat(data).slice(-20);
+      const badge=document.getElementById('notifBadge');
+      badge.textContent=pendingNotifs.length;badge.classList.add('show');
+      const dd=document.getElementById('notifDropdown');
+      dd.innerHTML=pendingNotifs.slice().reverse().map(n=>{
+        const t=new Date(n.time);
+        return `<div class="notif-item"><span class="notif-dot ${n.type}"></span><div><div>${n.message}</div><div class="notif-time">${t.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+      }).join('');
+      data.forEach(n=>showToast(n.message,n.type));
+    }
+  }catch(e){}
+}
+async function pollTvMessage(){
+  try{
+    const r=await fetch(API_BASE+'/api/tv/message');
+    const d=await r.json();
+    const overlay=document.getElementById('tvOverlay');
+    if(d.text){
+      document.getElementById('tvOverlayText').textContent=d.text;
+      overlay.classList.add('show');
+    }else{
+      overlay.classList.remove('show');
+    }
+  }catch(e){}
+}
+
 // Init & auto-refresh
-fetchFridge();fetchAppliances();
+fetchFridge();fetchAppliances();pollNotifications();pollTvMessage();
 setInterval(()=>{fetchFridge();fetchAppliances()},10000);
+setInterval(()=>{pollNotifications();pollTvMessage()},5000);
 chatInput.focus();
 </script>
 </body>
