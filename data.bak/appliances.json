@@ -1,11 +1,142 @@
 {
-  "washer": {"name": "세탁기", "status": "idle", "course": null, "remainingMin": 0},
-  "aircon": {"name": "에어컨", "status": "off", "targetTemp": 24, "currentTemp": 22, "mode": "auto"},
-  "vacuum": {"name": "로봇청소기", "status": "docked", "battery": 100, "lastCleaned": "2026-02-16T10:00:00+09:00"},
-  "lights": {
-    "거실": {"on": true, "brightness": 80},
-    "안방": {"on": false, "brightness": 0},
-    "주방": {"on": true, "brightness": 100},
-    "화장실": {"on": false, "brightness": 0}
+  "rooms": {
+    "거실": {
+      "tv": {
+        "name": "TV",
+        "status": "on",
+        "input": "AI홈 대시보드",
+        "volume": 15
+      },
+      "aircon": {
+        "name": "에어컨",
+        "status": "off",
+        "targetTemp": 24,
+        "currentTemp": 22,
+        "mode": "auto"
+      },
+      "light": {
+        "name": "조명",
+        "on": true,
+        "brightness": 80,
+        "color": "warm"
+      },
+      "vacuum": {
+        "name": "로봇청소기",
+        "status": "cleaning",
+        "battery": 100,
+        "lastCleaned": "2026-02-16T10:00:00+09:00"
+      },
+      "airpurifier": {
+        "name": "공기청정기",
+        "status": "auto",
+        "pm25": 15,
+        "filterLife": 85
+      }
+    },
+    "주방": {
+      "fridge": {
+        "name": "냉장고",
+        "status": "on",
+        "temp": 3,
+        "freezerTemp": -18
+      },
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "cool"
+      },
+      "dishwasher": {
+        "name": "식기세척기",
+        "status": "idle",
+        "course": null,
+        "remainingMin": 0
+      }
+    },
+    "안방": {
+      "aircon": {
+        "name": "에어컨",
+        "status": "off",
+        "targetTemp": 22,
+        "currentTemp": 23,
+        "mode": "냉방"
+      },
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "warm"
+      }
+    },
+    "작은방1": {
+      "aircon": {
+        "name": "에어컨",
+        "status": "off",
+        "targetTemp": 24,
+        "currentTemp": 22,
+        "mode": "auto"
+      },
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "warm"
+      }
+    },
+    "작은방2": {
+      "aircon": {
+        "name": "에어컨",
+        "status": "off",
+        "targetTemp": 24,
+        "currentTemp": 22,
+        "mode": "auto"
+      },
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "warm"
+      }
+    },
+    "화장실1": {
+      "washer": {
+        "name": "세탁기",
+        "status": "idle",
+        "course": null,
+        "remainingMin": 0,
+        "totalMin": 0
+      },
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "cool"
+      }
+    },
+    "화장실2": {
+      "light": {
+        "name": "조명",
+        "on": false,
+        "brightness": 0,
+        "color": "cool"
+      },
+      "fan": {
+        "name": "환풍기",
+        "status": "off"
+      }
+    },
+    "현관": {
+      "doorlock": {
+        "name": "도어락",
+        "locked": false,
+        "lastOpened": "2026-02-17T14:20:07.277783+09:00"
+      },
+      "light": {
+        "name": "조명",
+        "on": true,
+        "brightness": 100,
+        "color": "cool"
+      }
+    }
   }
 }
