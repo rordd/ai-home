@@ -6,9 +6,10 @@
 <title>빈버드 AI홈</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#1a1a1a;--card:#2a2a2a;--text:#e0e0e0;--muted:#888;--accent:#FF8C00;--charcoal:#3C3C3C;--danger:#ff4444;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,.4)}
+:root{--bg:#1a1a1a;--card:#2a2a2a;--text:#e0e0e0;--muted:#888;--accent:#FF8C00;--charcoal:#3C3C3C;--danger:#ff4444;--success:#4ecca3;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,.4)}
 html{font-size:clamp(14px,1.8vw,22px)}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
 /* Header */
 .header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.5rem;background:var(--charcoal);flex-shrink:0}
 .header h1{font-size:1.6rem;color:var(--accent)}
@@ -16,42 +17,58 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .weather{display:flex;align-items:center;gap:.4rem}
 .weather-icon{font-size:1.4rem}
 .clock{font-variant-numeric:tabular-nums;font-weight:600}
+
 /* Main */
 .main{display:flex;flex:1;gap:1rem;padding:1rem;overflow:hidden}
+
 /* Chat */
-.chat-panel{flex:0 0 60%;display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.chat-panel{flex:0 0 58%;display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .chat-header{padding:.7rem 1rem;font-size:1.1rem;font-weight:700;border-bottom:1px solid #444;color:var(--accent)}
 .messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem}
-.msg{max-width:80%;padding:.6rem 1rem;border-radius:12px;line-height:1.5;word-break:break-word}
+.msg{max-width:85%;padding:.7rem 1rem;border-radius:12px;line-height:1.6;word-break:break-word;font-size:.95rem}
 .msg.bot{align-self:flex-start;background:#383838;border-left:3px solid var(--accent)}
-.msg.user{align-self:flex-end;background:var(--accent);color:#111}
+.msg.bot h3,.msg.bot h4{color:var(--accent);margin:.4rem 0 .2rem;font-size:1rem}
+.msg.bot ul,.msg.bot ol{padding-left:1.2rem;margin:.3rem 0}
+.msg.bot li{margin:.15rem 0}
+.msg.bot strong{color:var(--accent)}
+.msg.bot code{background:#2a2a2a;padding:.1rem .3rem;border-radius:4px;font-size:.9em}
+.msg.user{align-self:flex-end;background:var(--accent);color:#111;font-weight:500}
+.msg.loading{align-self:flex-start;background:#383838;border-left:3px solid var(--accent);color:var(--muted);font-style:italic}
 .chat-input{display:flex;gap:.5rem;padding:.7rem;border-top:1px solid #444}
-.chat-input input{flex:1;padding:.6rem 1rem;border:none;border-radius:10px;background:#383838;color:var(--text);font-size:1rem;outline:none}
+.chat-input input{flex:1;padding:.7rem 1rem;border:none;border-radius:10px;background:#383838;color:var(--text);font-size:1rem;outline:none}
 .chat-input input:focus{box-shadow:0 0 0 2px var(--accent)}
-.chat-input button{padding:.6rem 1.2rem;border:none;border-radius:10px;background:var(--accent);color:#111;font-weight:700;font-size:1rem;cursor:pointer}
+.chat-input button{padding:.7rem 1.4rem;border:none;border-radius:10px;background:var(--accent);color:#111;font-weight:700;font-size:1rem;cursor:pointer;transition:opacity .2s}
+.chat-input button:hover{opacity:.85}
+.chat-input button:disabled{opacity:.4;cursor:not-allowed}
+
 /* Right panels */
 .right-panel{flex:1;display:flex;flex-direction:column;gap:1rem;overflow:hidden}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;flex:1}
 .card-title{padding:.7rem 1rem;font-weight:700;font-size:1.05rem;border-bottom:1px solid #444;color:var(--accent);flex-shrink:0}
 .card-body{flex:1;overflow-y:auto;padding:.8rem 1rem}
+
 /* Fridge */
-.fridge-item{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid #333}
+.fridge-item{display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid #333}
 .fridge-item:last-child{border:none}
 .fridge-name{font-weight:600}
-.fridge-qty{color:var(--muted);font-size:.85rem}
-.fridge-dday{font-weight:700;font-size:.9rem}
+.fridge-qty{color:var(--muted);font-size:.85rem;margin-left:.3rem}
+.fridge-dday{font-weight:700;font-size:.9rem;white-space:nowrap}
 .fridge-dday.urgent{color:var(--danger);animation:pulse 1.5s infinite}
+.fridge-dday.ok{color:var(--success)}
 @keyframes pulse{50%{opacity:.5}}
+
 /* Appliances */
-.appliance{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #333}
+.appliance{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid #333}
 .appliance:last-child{border:none}
 .appliance-info{display:flex;align-items:center;gap:.6rem}
 .appliance-icon{font-size:1.4rem}
+.appliance-status{font-size:.85rem}
 .toggle{width:3.2rem;height:1.7rem;border-radius:1rem;border:none;cursor:pointer;position:relative;transition:background .3s}
 .toggle.on{background:var(--accent)}
 .toggle.off{background:#555}
 .toggle::after{content:'';position:absolute;top:.15rem;left:.15rem;width:1.4rem;height:1.4rem;border-radius:50%;background:#fff;transition:transform .3s}
 .toggle.on::after{transform:translateX(1.5rem)}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
@@ -75,7 +92,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="chat-input">
       <input id="chatInput" placeholder="메시지를 입력하세요..." autocomplete="off">
-      <button onclick="sendChat()">전송</button>
+      <button id="sendBtn" onclick="sendChat()">전송</button>
     </div>
   </div>
 
@@ -94,6 +111,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <script>
 const API_BASE = window.location.origin.includes('github.io') ? 'http://localhost:3000' : '';
 
+// Simple markdown to HTML
+function md(text) {
+  if (!text) return '';
+  return text
+    .replace(/### (.*)/g, '<h4>$1</h4>')
+    .replace(/## (.*)/g, '<h3>$1</h3>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/^\d+\.\s+(.*)/gm, '<li>$1</li>')
+    .replace(/^- (.*)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
 // Clock
 function updateClock(){
   const now=new Date();
@@ -101,7 +133,7 @@ function updateClock(){
 }
 setInterval(updateClock,1000);updateClock();
 
-// Weather (Open-Meteo)
+// Weather
 async function fetchWeather(){
   try{
     const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.55&longitude=126.85&current=temperature_2m,weather_code&timezone=Asia%2FSeoul');
@@ -111,70 +143,109 @@ async function fetchWeather(){
     const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌧',63:'🌧',65:'🌧️',71:'🌨',73:'🌨',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
     document.getElementById('wIcon').textContent=icons[wc]||'🌡';
     document.getElementById('wTemp').textContent=Math.round(t)+'°C';
-  }catch(e){document.getElementById('wTemp').textContent='날씨 오류'}
+  }catch(e){document.getElementById('wTemp').textContent='--'}
 }
 fetchWeather();setInterval(fetchWeather,600000);
 
 // Chat
 const msgBox=document.getElementById('messages');
 const chatInput=document.getElementById('chatInput');
-chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
+const sendBtn=document.getElementById('sendBtn');
+
+chatInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}
+});
 
 function addMsg(text,type){
   const d=document.createElement('div');
   d.className='msg '+type;
-  d.textContent=text;
+  if(type==='bot') d.innerHTML=md(text);
+  else d.textContent=text;
   msgBox.appendChild(d);
   msgBox.scrollTop=msgBox.scrollHeight;
+  return d;
 }
 
 async function sendChat(){
   const text=chatInput.value.trim();
   if(!text)return;
   chatInput.value='';
+  sendBtn.disabled=true;
   addMsg(text,'user');
+  const loading=addMsg('빈버드가 생각 중...','loading');
   try{
     const r=await fetch(API_BASE+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
     const d=await r.json();
-    addMsg(d.reply||d.message||JSON.stringify(d),'bot');
-  }catch(e){addMsg('⚠️ 서버 연결 실패','bot')}
+    loading.remove();
+    addMsg(d.reply||d.error||'응답 없음','bot');
+  }catch(e){
+    loading.remove();
+    addMsg('⚠️ 서버 연결 실패','bot');
+  }
+  sendBtn.disabled=false;
+  chatInput.focus();
 }
 
 // Fridge
 async function fetchFridge(){
   try{
     const r=await fetch(API_BASE+'/api/fridge');
-    const items=await r.json();
+    const data=await r.json();
+    const items=data.items||data||[];
     const el=document.getElementById('fridge');
     if(!items.length){el.innerHTML='<div style="color:var(--muted)">재고 없음</div>';return}
     el.innerHTML=items.map(i=>{
-      const exp=new Date(i.expiry||i.expiryDate||i.expiration);
-      const diff=Math.ceil((exp-new Date())/(86400000));
-      const cls=diff<=3?'urgent':'';
-      return `<div class="fridge-item"><div><span class="fridge-name">${i.name}</span> <span class="fridge-qty">×${i.quantity||i.qty||1}</span></div><span class="fridge-dday ${cls}">D${diff<=0?'+'+Math.abs(diff):'-'+diff}</span></div>`;
+      const exp=i.expiry||i.expiryDate||null;
+      let ddayStr='';
+      let cls='ok';
+      if(exp){
+        const diff=Math.ceil((new Date(exp)-new Date())/(86400000));
+        cls=diff<=3?'urgent':'ok';
+        ddayStr=diff<=0?'D+'+Math.abs(diff):'D-'+diff;
+      }
+      return `<div class="fridge-item"><div><span class="fridge-name">${i.name}</span><span class="fridge-qty">${i.quantity||''}</span></div>${ddayStr?`<span class="fridge-dday ${cls}">${ddayStr}</span>`:''}</div>`;
     }).join('');
   }catch(e){document.getElementById('fridge').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
 }
 
 // Appliances
+const deviceIcons={washer:'🫧',aircon:'❄️',vacuum:'🤖',lights:'💡'};
+const deviceNames={washer:'세탁기',aircon:'에어컨',vacuum:'로봇청소기',lights:'조명'};
+
+function isDeviceOn(key,val){
+  if(key==='lights') return Object.values(val).some(r=>r.on);
+  return val.status==='on'||val.status==='running'||val.status==='cleaning';
+}
+
+function deviceDetail(key,val){
+  if(key==='washer') return val.status==='running'?`${val.course||'표준'} ${val.remainingMin}분 남음`:(val.status==='idle'?'대기':'완료');
+  if(key==='aircon') return val.status==='on'?`${val.targetTemp}°C ${val.mode}`:'꺼짐';
+  if(key==='vacuum') return val.status==='docked'?`충전중 ${val.battery}%`:(val.status==='cleaning'?'청소중':'복귀중');
+  if(key==='lights'){const on=Object.entries(val).filter(([,v])=>v.on).map(([k])=>k);return on.length?on.join(', ')+' 켜짐':'전체 꺼짐'}
+  return val.status||'';
+}
+
 async function fetchAppliances(){
   try{
     const r=await fetch(API_BASE+'/api/appliances');
-    const items=await r.json();
+    const data=await r.json();
     const el=document.getElementById('appliances');
-    if(!items.length){el.innerHTML='<div style="color:var(--muted)">등록된 가전 없음</div>';return}
-    el.innerHTML=items.map(i=>{
-      const on=i.status==='on'||i.state==='on'||i.on===true;
-      const icons={'에어컨':'❄️','세탁기':'🫧','조명':'💡','TV':'📺','공기청정기':'🌬','로봇청소기':'🤖','가습기':'💧'};
-      const icon=icons[i.name]||i.icon||'⚡';
-      return `<div class="appliance"><div class="appliance-info"><span class="appliance-icon">${icon}</span><span>${i.name} <span style="color:${on?'var(--accent)':'var(--muted)'}">${on?'켜짐':'꺼짐'}</span></span></div><button class="toggle ${on?'on':'off'}" onclick="toggleAppliance('${i.id||i.device||i.name}',${!on})"></button></div>`;
+    const keys=Object.keys(data).filter(k=>k!=='lastUpdated');
+    if(!keys.length){el.innerHTML='<div style="color:var(--muted)">등록된 가전 없음</div>';return}
+    el.innerHTML=keys.map(key=>{
+      const val=data[key];
+      const on=isDeviceOn(key,val);
+      const icon=deviceIcons[key]||'⚡';
+      const name=val.name||deviceNames[key]||key;
+      const detail=deviceDetail(key,val);
+      return `<div class="appliance"><div class="appliance-info"><span class="appliance-icon">${icon}</span><div><div>${name} <span style="color:${on?'var(--accent)':'var(--muted)'}"> ${on?'ON':'OFF'}</span></div><div class="appliance-status" style="color:var(--muted)">${detail}</div></div></div><button class="toggle ${on?'on':'off'}" onclick="toggleAppliance('${key}',${!on})"></button></div>`;
     }).join('');
   }catch(e){document.getElementById('appliances').innerHTML='<div style="color:var(--muted)">연결 실패</div>'}
 }
 
 async function toggleAppliance(device,state){
   try{
-    await fetch(API_BASE+'/api/appliances/'+encodeURIComponent(device),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
+    await fetch(API_BASE+'/api/appliances/'+device,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:state?'on':'off'})});
     fetchAppliances();
   }catch(e){}
 }
@@ -182,6 +253,7 @@ async function toggleAppliance(device,state){
 // Init & auto-refresh
 fetchFridge();fetchAppliances();
 setInterval(()=>{fetchFridge();fetchAppliances()},10000);
+chatInput.focus();
 </script>
 </body>
 </html>
