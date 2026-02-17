@@ -14,6 +14,11 @@ const APPLIANCES_PATH = path.join(DATA_DIR, 'appliances.json');
 app.use(cors());
 app.use(express.json());
 
+// Serve index.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
 // Helper: read JSON file
 function readJSON(filePath) {
   if (!fs.existsSync(filePath)) return [];

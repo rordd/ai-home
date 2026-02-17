@@ -92,7 +92,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <script>
-const API_BASE = 'http://localhost:3000';
+const API_BASE = window.location.origin.includes('github.io') ? 'http://localhost:3000' : '';
 
 // Clock
 function updateClock(){
